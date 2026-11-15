@@ -10,11 +10,11 @@
 
 ### 1.1 서비스 소개
 
-**Welody(윌로디)**는 차량 안에서 나눈 대화를 AI 음악으로 변환하고, 음악이 만들어진 위치와 당시의 차량 상태 및 주변 환경을 함께 저장하는 위치 기반 AI 음악 메모리 서비스다.
+**Welody(윌로디)**는 차량 안에서 나눈 대화와 그 순간의 위치·날씨·주행 정보를 음악 메모리로 남기는 위치 기반 서비스다.
 
-사용자는 차량 인포테인먼트 시스템에서 Welody를 실행하고 원하는 음악 장르를 선택한 다음, '대화 녹음하기' 버튼을 눌러 대화 기록을 시작한다.
+현재 저장소에서 실행할 수 있는 앱은 React/TypeScript 웹 시뮬레이터와 Node.js 백엔드다. 시연 모드에서는 샘플 대화와 환경 데이터, 준비된 음원으로 음악 생성부터 위치 기반 메모리 재생까지 확인할 수 있다. 실제 Pleos Connect 앱 및 SDK 연결은 아직 구현되지 않았다.
 
-Pleos SpeechToText SDK를 통해 대화를 텍스트로 변환하고, AI가 대화의 내용과 감정을 분석하여 가사를 만든다. 이후 Google Lyria 3.5를 사용해 실제 음악을 생성한다.
+제품의 목표는 차량 인포테인먼트 시스템에서 장르를 선택하고 대화를 기록해, AI 음악으로 만든 뒤 당시의 위치와 함께 저장하는 것이다. 실제 Pleos 마이크 입력과 Google 음악 생성은 시연 모드와 구분되며, 외부 API·SDK의 사용 가능 여부에 따라 별도 설정이 필요하다.
 
 이때 사용자가 선택한 음악 장르만 반영하는 것이 아니라, 음악이 만들어지는 순간의 다양한 데이터를 함께 활용한다.
 
@@ -1381,24 +1381,42 @@ Welody가 궁극적으로 제공하는 경험은 단순히 AI가 음악을 만�
 
 현재 저장소에는 README의 MVP 중 **Web Simulator, Backend API, 컨텍스트 분석, Music Memory, 지도 및 지오펜스 재생 흐름**이 구현되어 있다. 시연은 `DEMO_MODE=true`로 외부 AI·DB 요청 없이 수행하며, 실제 API 연결은 `DEMO_MODE=false`로 전환한다.
 
-### 실행 방법
+### 심사 제출 정보
 
-필요 조건: Node.js 20 이상.
+| 항목 | 내용 |
+|---|---|
+| 앱 이름 | Welody (윌로디) |
+| 한 줄 소개 | 대화와 주행 순간을 노래로 기억하고, 장소에서 다시 재생하는 위치 기반 음악 메모리 |
+| 제출 가능한 앱 | 브라우저에서 실행하는 Web Simulator |
+| Pleos Connect 에뮬레이터 | 사용하지 않음. 개발 환경에서 에뮬레이터 및 Pleos SDK에 접근할 수 없어 버전 정보가 없음 |
+| 화면 규격 | Pleos 화면 규격은 미확정. 웹 시뮬레이터 시연 캡처는 브라우저 뷰포트 1440 × 1000 px 기준이며, Pleos 에뮬레이터 해상도를 의미하지 않음 |
+| APK / GitHub Release | Android APK는 아직 빌드하지 않았고 등록된 Release도 없음. [GitHub Releases](https://github.com/mightycosmos/welody/releases)에서 추후 배포 예정 |
+
+### 테스트 환경 및 필요한 설정
+
+- 확인한 환경: Ubuntu 24.04, Node.js 24.22.2, npm 11.19.1. Node.js 20 이상 필요.
+- 지도 타일 표시에는 인터넷 연결이 필요하다. Demo Mode의 대화 분석·음악 재생에는 외부 API 키가 필요하지 않다.
+- `.env.example`을 루트 `.env`로 복사한 뒤 실행한다. 기본 `DEMO_MODE=true`는 시연에 필요한 설정을 포함한다.
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
 - Web Simulator: `http://localhost:5173`
 - Backend health check: `http://localhost:3000/api/health`
 
-`.env.example`을 참고해 루트 `.env`를 만들 수 있다. Demo Mode는 외부 생성·날씨 API 키 없이 동작하며, 실제 지도 타일은 OpenStreetMap 사용을 위해 인터넷 연결이 필요하다. Live Mode의 Open-Meteo 날씨 조회는 API Key가 필요 없다.
+테스트와 빌드는 다음 명령으로 확인한다.
 
 ```bash
-npm run build
 npm test
+npm run build
 ```
+
+실제 AI 연결을 시험하려면 `.env`에서 `DEMO_MODE=false`, `AI_PROVIDER=google`을 설정하고 서버 전용 `GEMINI_API_KEY`를 입력한다. 실제 Supabase 저장을 사용할 경우 `PERSISTENCE_PROVIDER=supabase`, `SUPABASE_URL`, 서버 전용 `SUPABASE_SECRET_KEY`(또는 `SUPABASE_SERVICE_ROLE_KEY`)를 설정하고 `supabase/migrations/`의 마이그레이션을 먼저 적용해야 한다. 키를 프론트엔드에 입력하지 않는다.
+
+### 로컬 데이터 저장
 
 생성된 음악과 세션 메타데이터는 개발용 로컬 JSON 저장소(`backend/data/`)에 유지된다. 실제 배포 전에는 Supabase migration을 적용하고 저장소 구현을 PostgreSQL 및 Supabase Storage로 전환해야 한다.
 
