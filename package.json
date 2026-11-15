@@ -1,0 +1,22 @@
+{
+  "name": "welody",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "backend",
+    "apps/simulator"
+  ],
+  "scripts": {
+    "dev": "npm run build --workspace @welody/shared && concurrently -k -n api,simulator -c blue,green \"npm:dev:api:watch\" \"npm:dev:simulator:watch\"",
+    "dev:api": "npm run build --workspace @welody/shared && npm run dev --workspace @welody/backend",
+    "dev:simulator": "npm run build --workspace @welody/shared && npm run dev --workspace @welody/simulator",
+    "dev:api:watch": "npm run dev --workspace @welody/backend",
+    "dev:simulator:watch": "npm run dev --workspace @welody/simulator",
+    "build": "npm run build --workspace @welody/shared && npm run build --workspace @welody/backend && npm run build --workspace @welody/simulator",
+    "test": "npm run test --workspace @welody/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}
